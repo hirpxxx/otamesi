@@ -197,7 +197,7 @@ do
 		fi
 		
 		echo "結果:$doc"	
-		if [[ $doc == *"FC2"* ]] || [[ $doc == *"-CARIB"* ]];
+		if [[ $doc == *"FC2"* ]] || [[ $doc == *"CARIB"* ]];
 		then
                         ret=$( echo "$doc" | sed -r "s/FC2-PPV-([0-9]{6}).*/\1/" )
                         echo "文字数:$ret:"
