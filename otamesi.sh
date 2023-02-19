@@ -238,6 +238,18 @@ $array
 END
 
 IFS="$IFS_ORIGINAL"
+#=======テンポラリィーファイル削除===========
+MotoPath=$(pwd)
+cd $(dirname $0)
+NowPath=$(pwd)
+echo "元：$MotoPath"
+echo "今：$NowPath"
+rm -f "$NowPath/filelist"
+rm -f "$NowPath/test"
+rm -f "$NowPath/working"
+
+
+
 
 exit 0
 
