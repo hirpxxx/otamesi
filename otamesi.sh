@@ -196,19 +196,29 @@ do
 			doc=$(echo $doc | sed -r "s/__/_/g")
 		fi
 		
-		echo "結果:$doc"	
-		if [[ $doc == *"FC2"* ]] || [[ $doc == *"CARIB"* ]];
+		echo "結果:$doc"
+		
+		
+		#======【裏】【表】判定================================
+		#sed前後で文字数に変化があれば、対象文字が含まれていると判定する
+		motomojisu=${#doc}
+		ret=$(echo $doc | sed -r "s/FC2|CARIB//g")
+		atomojisu=${#ret}
+		echo "元文字$motomojisu"
+		echo "先文字$atomojisu"
+
+		if [[ $motomojisu -ne $atomojisu ]];
 		then
-                        ret=$( echo "$doc" | sed -r "s/FC2-PPV-([0-9]{6}).*/\1/" )
-                        echo "文字数:$ret:"
-                        ret=$( echo "$ret" | sed -r "s/ //g" )
-                        ret=$( echo "$ret" | wc -m )
+			ret=$( echo "$doc" | sed -r "s/FC2-PPV-([0-9]{6}).*/\1/" )
+            echo "文字数:$ret:"
+            ret=$( echo "$ret" | sed -r "s/ //g" )
+            ret=$( echo "$ret" | wc -m )
                         
 			echo "文字数:$ret" 
-                        if [[ 6 -eq "$ret" ]];
-                        then
-			        doc=$( echo "$doc" | sed -r "s/PPV-/PPV-0/" )
-                        fi
+            if [[ 6 -eq "$ret" ]];
+            then
+			    doc=$( echo "$doc" | sed -r "s/PPV-/PPV-0/" )
+            fi
 			doc=$( echo "【裏】$doc")
 		else
 			if [[ $doc == *"No results found"* ]];
