@@ -202,7 +202,7 @@ do
 		#======【裏】【表】判定================================
 		#sed前後で文字数に変化があれば、対象文字が含まれていると判定する
 		motomojisu=${#doc}
-		ret=$(echo $doc | sed -r "s/FC2|CARIB//g")
+		ret=$(echo $doc | sed -r "s/FC2|CARIB|HEYZO//g")
 		atomojisu=${#ret}
 		echo "元文字$motomojisu"
 		echo "先文字$atomojisu"
