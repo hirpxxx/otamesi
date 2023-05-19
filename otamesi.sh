@@ -51,20 +51,24 @@ rm $out_file  > /dev/null 2>&1
 TargetPATH="/Users/asaihiroyuki/Downloads"	
 #TargetPATH="/Volumes/WD5000LPX"
 
+echo "=======ファイル移動(サブフォルダーから$TargetPATH へ)==========="
 find ~/Downloads -name \*.mp4 -o -name \*.mov -o -name \*.mkv | grep -v "【ＡＶ】\|【裏】" | sed -n "/\/Downloads\/.*\/.*\.[A-Za-z]\{2,3\}/P" | sort > $out_file
-
 while read line
 do
-	echo "COPY:$line"
+	echo "MOVE FILE:$line"
 	mv "$line" "$TargetPATH/" 
 	d_name=$(dirname "$line")
-	echo "削除パス:$d_name"
 	findarray=($(find "$d_name" ))
-	echo "${findarray[@]}" 
-
+	echo "削除確認：$rm_dir"
+	rm_dir=$(find $d_name -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov -o -name \*.mkv -o -name \*.MP4 -o -name \*.part)
+	if [[ ${#rm_dir} -lt 1 ]]
+	then
+		echo "削除実行:$d_name"
+		rm -rf $d_name
+	fi
 done < ./$out_file
 
-
+#exit 0
 	
 while read line
 do 
@@ -90,8 +94,8 @@ while read line
 do 
 	TargetPATH=$line
 	echo $TargetPATH
-	find $TargetPATH -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov -o -name \*.mkv -o -name \*.MP4 | grep -v "【ＡＶ】\|【裏】\|SpankBang\|Watch\|写真ライブラリ" | grep -v "/._" | sort >> $out_file
-	array=$( /usr/bin/find $TargetPATH -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov | grep -v "【ＡＶ】\|【裏】\|SpankBang\|Watch\|写真ライブラリ" | grep -v "/._" | sort )
+	find $TargetPATH -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov -o -name \*.mkv -o -name \*.MP4 | grep -v "【ＡＶ】\|【裏】\|SpankBang\|Watch\|写真ライブラリ\|xHamster\|Pornhub\|Javmix" | grep -v "/._" | sort >> $out_file
+	array=$( /usr/bin/find $TargetPATH -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov | grep -v "【ＡＶ】\|【裏】\|SpankBang\|Watch\|写真ライブラリ\|xHamster\|Pornhub\|Javmix" | grep -v "/._" | sort )
 	if [ $0 =  0 ];then
 		echo $array[@] >> $out_file
 	fi
@@ -121,12 +125,14 @@ do
 	filenm=$(echo "$filenm" | sed -e "s/Javmix\.TV//" )	
 	filenm=$(echo "$filenm" | sed -e "s/hhd[0-9]\{3\}.*\@//" )	
 	filenm=$(echo "$filenm" | sed -e "s/hdd[0-9]\{3\}.*\@//" )	
+	filenm=$(echo "$filenm" | sed -e "s/^gg5.*\@//" )	
+	filenm=$(echo "$filenm" | sed -e "s/\-C_GG5//" )	
 	filenm=$(echo "$filenm" | sed -e "s/_UNCENSORED_LEAKED_NOWATERMARK//" )
 	filenm=$(echo "$filenm" | sed -e "s/_UNCENSORED_LEAKED//" )
 	filenm=$(echo "$filenm" | sed -e "s/_[0-9]$//" )	
 	filenm=$(echo "$filenm" | sed -e "s/_[A-Za-z]$//" )	
 	filenm=$(echo "$filenm" | sed -e "s/[^0-9A-Za-z]\|^(-)//g" )	
-	#${#filenm}
+	#gg5.co@
 	echo "${#filenm}:$filenm"
 	rm "kekka"
 	#if [ "${#filenm}" -lt 16 ] ; then
@@ -139,7 +145,7 @@ do
 		else
 			echo "$line\t$ret_fc2" >> $work_file
 			filenm="$ret_fc2"			
-		fi 
+		fi
 		#NUMMOJINUM "$filenm"	
 		#echo "RET:$ret_nummojinum"
                 #if [$nummojinum != "NG" ];
@@ -152,21 +158,19 @@ do
 		echo "===========小文字→大文字=============" 	
 		filenm=$(echo "$filenm" | tr a-z A-Z )
 		echo "$filenm"	
-		doc=$(curl --insecure "https://sukebei.nyaa.si/?f=2&c=2_2&q=$filenm&s=id&o=asc")
+		if [[ ${#filenm} -lt 20 ]] ;then
+			doc=$(curl --insecure "https://sukebei.nyaa.si/?f=2&c=2_2&q=$filenm&s=id&o=asc")
+		else
+			doc="<A>No results found</A>"
+		fi
 		echo $doc >> "test"
 		doc=$(echo $doc | sed -r "s/\t//g")
-		
+		kb_hantei=-1		
 		if [[ $doc == *"No results found"* ]];then
-			#doc=$(curl --insecure 'https://javfree.me/?s="SDNM-300"')
 			doc=$(echo $doc | grep "No results found")
 			doc=$(echo $doc | sed -r "s/^.*(No\ results\ found).*$/\1/")
 		else
-			#doc=$(echo $doc | grep "entry-title" | grep "h2 class")
-			#doc=$(echo $doc | sed -r "s/^.*<a.*>(.*)<.a.*$/\1/")
-			#doc=$(echo $doc | sed -r "s/\[HD\]//")
-			#doc=$(echo $doc | sed -r "s/\[.*\]//g")
-			#doc=$(echo $doc | sed -r "s/^\ //")
-			#doc=$(echo $doc | sed -r "s/\ /_/g")
+			kb_hantei=1
 			doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文字幕" )
 			#echo "1==============================="
 			#echo $doc
@@ -202,32 +206,35 @@ do
 		#======【裏】【表】判定================================
 		#sed前後で文字数に変化があれば、対象文字が含まれていると判定する
 		motomojisu=${#doc}
-		ret=$(echo $doc | sed -r "s/FC2|CARIB|HEYZO//g")
+		ret=$(echo $doc | sed -r "s/FC2|CARIB|HEYZO|1PON|PORNHUB|Pornhub|KIN8|10MU//g")
 		atomojisu=${#ret}
 		echo "元文字$motomojisu"
 		echo "先文字$atomojisu"
-
-		if [[ $motomojisu -ne $atomojisu ]];
+		if [[ $kb_hantei -eq 1 ]];
 		then
-			ret=$( echo "$doc" | sed -r "s/FC2-PPV-([0-9]{6}).*/\1/" )
-            echo "文字数:$ret:"
-            ret=$( echo "$ret" | sed -r "s/ //g" )
-            ret=$( echo "$ret" | wc -m )
-                        
-			echo "文字数:$ret" 
-            if [[ 6 -eq "$ret" ]];
-            then
-			    doc=$( echo "$doc" | sed -r "s/PPV-/PPV-0/" )
-            fi
-			doc=$( echo "【裏】$doc")
-		else
-			if [[ $doc == *"No results found"* ]];
+			if [[ $motomojisu -ne $atomojisu ]];
 			then
-				doc=$( echo "$doc" | sed -r "s/\ /_/g" )
+				ret=$( echo "$doc" | sed -r "s/FC2-PPV-([0-9]{6}).*/\1/" )
+				echo "文字数:$ret:"
+				ret=$( echo "$ret" | sed -r "s/ //g" )
+				ret=$( echo "$ret" | wc -m )
+							
+				echo "文字数:$ret" 
+				if [[ 6 -eq "$ret" ]];
+				then
+					doc=$( echo "$doc" | sed -r "s/PPV-/PPV-0/" )
+				fi
+				doc=$( echo "【裏】$doc")
 			else
-				doc=$( echo "【ＡＶ】$doc")
+				if [[ $doc == *"No results found"* ]];
+				then
+					doc=$( echo "$doc" | sed -r "s/\ /_/g" )
+				else
+					doc=$( echo "【ＡＶ】$doc")
+				fi
 			fi
 		fi
+
 		IFS="$IFS_ORIGINAL"
 		if [[ $doc != *"No_results_found"* ]];
 		then
@@ -257,6 +264,33 @@ echo "今：$NowPath"
 rm -f "$NowPath/filelist"
 rm -f "$NowPath/test"
 rm -f "$NowPath/working"
+
+exit 0
+
+#================空フォルダー削除============
+echo "空フォルダー削除"
+TargetPATH=$("$HOME/Downloads")
+cd /Users/asaihiroyuki/Downloads
+
+echo "$(pwd)"
+NowPath=$(pwd)
+array=$(ls -l | grep ^d | awk {'print $9 | "sort"'})
+echo "===ディレクトリー 一覧表示"
+while read line
+do
+	echo "$line"
+	files=$(find $NowPath/$line -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov -o -name \*.mkv -o -name \*.MP4 -o -name \*.part)
+	echo "$files"
+	if [[ ${#files} -lt 1 ]]
+	then
+		echo "削除対象:$NowPath/$line"
+		rm -rf $NowPath/$line
+	fi
+
+
+done << END 
+	$array
+END
 
 
 
