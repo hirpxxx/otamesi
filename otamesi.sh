@@ -236,7 +236,7 @@ do
 		fi
 
 		IFS="$IFS_ORIGINAL"
-		if [[ $doc != *"No_results_found"* ]];
+		if [[ $doc != *"No results found"* ]];
 		then
 			#echo "$doc"	
 			doc=$(echo $doc | sed -e "s/$/_/")	
