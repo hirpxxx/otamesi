@@ -32,8 +32,13 @@ echo "引数:$value"
 
 
 echo "================================================================================"
-inifile="otamesi.ini"
-#ini=$( cat $inifaile )
+work="otamesi.ini"
+inifile="wortini.txt"
+cat $work | sed "/^#/d" > $inifile 
+echo "=====ini======"
+echo $inifile
+
+#inifile="otamesi.ini"
 
 #ls /Users/asaihiroyuki/Downloads
 #ls /Users/asaihiroyuki/Downloads/ | grep -i "MP4\|MOV" | grep -v "【ＡＶ】\|【裏】\|Javmix"
@@ -69,7 +74,8 @@ do
 done < ./$out_file
 
 #exit 0
-	
+
+
 while read line
 do 
 	echo "======対象:$TargetPATH===================" 
