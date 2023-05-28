@@ -170,6 +170,7 @@ do
 			doc="<A>No results found</A>"
 		fi
 		echo $doc >> "test"
+		#echo "最初 $doc"
 		doc=$(echo $doc | sed -r "s/\t//g")
 		kb_hantei=-1		
 		if [[ $doc == *"No results found"* ]];then
@@ -178,21 +179,25 @@ do
 		else
 			kb_hantei=1
 			doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文字幕" )
-			#echo "1==============================="
-			#echo $doc
-			#echo "1==============================="
+			echo "1==============================="
+			echo $doc
+			echo "1==============================="
 			doc=$(echo $doc | grep -E '[ぁ-んァ-ン]' )
 			doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文" |  head -n 1)
-			#echo "2==============================="
-			#echo $doc
-			#echo "2==============================="
+			echo "2==============================="
+			echo $doc
+			echo "2==============================="
 			doc=$(echo $doc | sed -r "s/^.*<a.*title=\"(.*)\">.*<\ a>.*$/\1/")
+			echo "結果0:$doc"	
 			#"💖
 			doc=$(echo $doc | tr [a-z] [A-Z])
 			doc=$(echo $doc | sed -r "s/^\ \{1,3\}//")
 			doc=$(echo $doc | sed -r "s/💖//g")
 			doc=$(echo $doc | sed -r "s/UNCENSORED_LEAKED_NOWATERMARK//g")
 			#_UNCENSORED_LEAKED_NOWATERMARK
+			doc=$(echo $doc | sed -r "s/\[JAV\]//g")
+			doc=$(echo $doc | sed -r "s/\[Uncensored\]//g")
+			doc=$(echo $doc | sed -r "s/\[[0-9]{3,4}P\]//g")
 			doc=$(echo $doc | sed -r "s/\[.*\]//g")
 			doc=$(echo $doc | sed -r "s/　//g")
 			doc=$(echo $doc | sed -r "s/\ \{2,9\}/_/g")
@@ -201,7 +206,9 @@ do
 			doc=$(echo $doc | sed -r "s/^\_//g")
 			doc=$(echo $doc | sed -r "s/\+\+\+_//")
 			doc=$(echo $doc | sed -r "s/\#\#\#//")
-			echo "結果:$doc"	
+			doc=$(echo $doc | sed -r "s/^_//g")
+			doc=$(echo $doc | sed -r "s/_$//g")
+			echo "結果1:$doc"	
 			doc=$(echo $doc | sed -r "s/($filenm)/\1_/")
 			doc=$(echo $doc | sed -r "s/__/_/g")
 		fi
@@ -212,7 +219,7 @@ do
 		#======【裏】【表】判定================================
 		#sed前後で文字数に変化があれば、対象文字が含まれていると判定する
 		motomojisu=${#doc}
-		ret=$(echo $doc | sed -r "s/FC2|CARIB|HEYZO|1PON|PORNHUB|Pornhub|KIN8|10MU//g")
+		ret=$(echo $doc | sed -r "s/FC2|CARIB|HEYZO|1PON|C0930|PORNHUB|Pornhub|KIN8|10MU|N[0-9]{3,4}//g")
 		atomojisu=${#ret}
 		echo "元文字$motomojisu"
 		echo "先文字$atomojisu"
@@ -231,6 +238,8 @@ do
 					doc=$( echo "$doc" | sed -r "s/PPV-/PPV-0/" )
 				fi
 				doc=$( echo "【裏】$doc")
+				doc=$( echo "$doc" | sed -r "s/【裏】N/【裏】TOKYO-HOT-N/" )
+
 			else
 				if [[ $doc == *"No results found"* ]];
 				then
