@@ -141,7 +141,7 @@ do
 	#gg5.co@
 	echo "${#filenm}:$filenm"
 	rm "kekka"
-	#if [ "${#filenm}" -lt 16 ] ; then
+	if [[ "${#filenm}" -lt 16 ]] ; then
 		FC2 "$filenm"
 		#ret=$(FC2 "$filenm")
 		echo "RET:$ret_fc2"
@@ -263,7 +263,7 @@ do
 			mv "$line" "$TargetPATH/$doc$motofile"
 		fi
 		#exit 0 
-	#fi
+	fi
 #done < ./$out_file
 done << END 
 $array
