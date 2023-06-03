@@ -141,7 +141,7 @@ do
 	#gg5.co@
 	echo "${#filenm}:$filenm"
 	rm "kekka"
-	if [[ "${#filenm}" -lt 16 ]] ; then
+	if [[ "${#filenm}" -lt 16 ]] || [[ $filenm == *"CARIB"* ]] ; then
 		FC2 "$filenm"
 		#ret=$(FC2 "$filenm")
 		echo "RET:$ret_fc2"
@@ -164,7 +164,7 @@ do
 		echo "===========小文字→大文字=============" 	
 		filenm=$(echo "$filenm" | tr a-z A-Z )
 		echo "$filenm"	
-		if [[ ${#filenm} -lt 20 ]] ;then
+		if [[ ${#filenm} -lt 20 ]] || [[ $filenm == *"CARIB"* ]] ;then
 			doc=$(curl --insecure "https://sukebei.nyaa.si/?f=2&c=2_2&q=$filenm&s=id&o=asc")
 		else
 			doc="<A>No results found</A>"
@@ -239,6 +239,10 @@ do
 				fi
 				doc=$( echo "【裏】$doc")
 				doc=$( echo "$doc" | sed -r "s/【裏】N/【裏】TOKYO-HOT-N/" )
+				if [[ $doc == *"CARIB"* ]] ;then
+					doc=$( echo "$doc" | sed -r "s/-CARIB_カリビアンコム//" )
+					doc=$( echo "$doc" | sed -r "s/【裏】/【裏】CARIBBIAN-/" )
+				fi
 
 			else
 				if [[ $doc == *"No results found"* ]];
@@ -255,6 +259,7 @@ do
 		then
 			#echo "$doc"	
 			doc=$(echo $doc | sed -e "s/$/_/")	
+			motofile=$(echo $motofile | sed -r "s/hhd800\.com@//g")
 			echo "MOTO:$doc$motofile"
 			echo "$filenm:$doc" >> "kekka"
 			TargetPATH=$(dirname $line)
