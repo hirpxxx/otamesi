@@ -80,10 +80,10 @@ while read line
 do 
 	echo "======対象:$TargetPATH===================" 
 	echo "====ファイル名の空白をアンスコに変換===="
-	find "$line" -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov | grep -v "/._" | while read file
+	find "$line" -type f -maxdepth 1 -name \*.mp4 -o -name \*.mov | grep -v "C0930" | grep -v "/._" | while read file
 	do 
 		echo "$file" | grep "\ "
-		if [ $? -eq 0 ] ; then
+		if [[ $? -eq 0 ]] ; then
 			echo "空白：$file"
 			file2=$(echo $file | sed -e "s/\ /_/g")
 			echo "空白：$file2"
@@ -138,6 +138,10 @@ do
 	filenm=$(echo "$filenm" | sed -e "s/_[0-9]$//" )	
 	filenm=$(echo "$filenm" | sed -e "s/_[A-Za-z]$//" )	
 	filenm=$(echo "$filenm" | sed -e "s/[^0-9A-Za-z]\|^(-)//g" )	
+	if [[ $filenm == *"C0930"*  ]] ;then
+		echo "C0930:$filenm"
+		filenm=$(echo "$filenm" | sed -e "s/C0930\ /C0930+/" )	
+	fi
 	#gg5.co@
 	echo "${#filenm}:$filenm"
 	rm "kekka"
@@ -166,30 +170,58 @@ do
 		echo "$filenm"	
 		if [[ ${#filenm} -lt 20 ]] || [[ $filenm == *"CARIB"* ]] ;then
 			doc=$(curl --insecure "https://sukebei.nyaa.si/?f=2&c=2_2&q=$filenm&s=id&o=asc")
+			sub_kensaku_kb=1
 		else
 			doc="<A>No results found</A>"
+			sub_kensaku_kb=0
 		fi
+		doc=$(echo $doc | sed -r "s/\t//g")
+		echo "検索１結果$doc"
+		if [[ $sub_kensaku_kb -eq 1 ]] && [[  $doc == *"No results found"* ]];then
+			doc=$(curl --insecure "https://db.msin.jp/jp.search/movie?str=$filenm")
+			#a href="/jp.page/movie?id=188370" title="AV史上もっとも綺麗な40代 宮本紗央里 42歳 AV Debut">
+			doc=$(echo $doc | sed -r "s/^.*<a href.*title\=\"(.*)\">.*<\ a><\ div><div\ class.*<\ body>/\1/" )
+			doc=$(echo "$filenm $doc" )
+			#<a href=" view 3893611" title="< a>
+			#<a href=" view 3893611" title=" ">
+			#doc=$(echo "<a href=" view 3893611" title=""" $doc """> < a>")
+			#検索結果がありません
+			if [[ $doc == *"検索結果がありません"* ]];then
+				doc="<A>No results found</A>"
+			fi
+			echo "===*** m s i n ***==="
+			echo $doc
+			echo "===*** m s i n ***==="
+			sub_kensaku_kb=3
+		fi
+		echo "検索２結果$doc"
+
+
 		echo $doc >> "test"
+		#exit 0
 		#echo "最初 $doc"
 		doc=$(echo $doc | sed -r "s/\t//g")
 		kb_hantei=-1		
-		if [[ $doc == *"No results found"* ]];then
-			doc=$(echo $doc | grep "No results found")
-			doc=$(echo $doc | sed -r "s/^.*(No\ results\ found).*$/\1/")
-		else
-			kb_hantei=1
-			doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文字幕" )
-			echo "1==============================="
-			echo $doc
-			echo "1==============================="
-			doc=$(echo $doc | grep -E '[ぁ-んァ-ン]' )
-			doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文" |  head -n 1)
-			echo "2==============================="
-			echo $doc
-			echo "2==============================="
-			doc=$(echo $doc | sed -r "s/^.*<a.*title=\"(.*)\">.*<\ a>.*$/\1/")
-			echo "結果0:$doc"	
-			#"💖
+		if [[ $sub_kensaku_kb -lt 2 ]];then 
+			if [[ $doc == *"No results found"* ]];then
+				doc=$(echo $doc | grep "No results found")
+				doc=$(echo $doc | sed -r "s/^.*(No\ results\ found).*$/\1/")
+			else
+				kb_hantei=1
+				doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文字幕" )
+				echo "1==============================="
+				echo $doc
+				echo "1==============================="
+				doc=$(echo $doc | grep -E '[ぁ-んァ-ン]' )
+				echo $doc
+				doc=$(echo $doc | grep "<a href" | grep "view" | grep "title" | grep -v "<th" | grep -v "中文" |  head -n 1)
+				echo "2==============================="
+				echo $doc
+				echo "2==============================="
+				doc=$(echo $doc | sed -r "s/^.*<a.*title=\"(.*)\">.*<\ a>.*$/\1/")
+				echo "結果0:$doc"	
+				#"💖
+			fi
 			doc=$(echo $doc | tr [a-z] [A-Z])
 			doc=$(echo $doc | sed -r "s/^\ \{1,3\}//")
 			doc=$(echo $doc | sed -r "s/💖//g")
@@ -211,10 +243,12 @@ do
 			echo "結果1:$doc"	
 			doc=$(echo $doc | sed -r "s/($filenm)/\1_/")
 			doc=$(echo $doc | sed -r "s/__/_/g")
+		fi		
+		if [[ $sub_kensaku_kb -eq 3 ]];then 
+			kb_hantei=1
+			doc=$(echo $doc | sed -r "s/\ /_/g")
 		fi
-		
 		echo "結果:$doc"
-		
 		
 		#======【裏】【表】判定================================
 		#sed前後で文字数に変化があれば、対象文字が含まれていると判定する
@@ -260,6 +294,8 @@ do
 			#echo "$doc"	
 			doc=$(echo $doc | sed -e "s/$/_/")	
 			motofile=$(echo $motofile | sed -r "s/hhd800\.com@//g")
+
+
 			echo "MOTO:$doc$motofile"
 			echo "$filenm:$doc" >> "kekka"
 			TargetPATH=$(dirname $line)
@@ -273,6 +309,7 @@ do
 done << END 
 $array
 END
+exit 0		
 
 IFS="$IFS_ORIGINAL"
 #=======テンポラリィーファイル削除===========
