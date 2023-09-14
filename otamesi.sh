@@ -60,8 +60,14 @@ echo "=======ファイル移動(サブフォルダーから$TargetPATH へ)=====
 find ~/Downloads -name \*.mp4 -o -name \*.mov -o -name \*.mkv | grep -v "【ＡＶ】\|【裏】" | sed -n "/\/Downloads\/.*\/.*\.[A-Za-z]\{2,3\}/P" | sort > $out_file
 while read line
 do
+	
+
 	echo "MOVE FILE:$line"
-	mv "$line" "$TargetPATH/" 
+	if [[ $doc != *"Tutorial_JP"* ]];then
+		mv "$line" "$TargetPATH/" 
+	else
+		rm "$line" 
+	fi
 	d_name=$(dirname "$line")
 	findarray=($(find "$d_name" ))
 	echo "削除確認：$rm_dir"
@@ -71,6 +77,7 @@ do
 		echo "削除実行:$d_name"
 		rm -rf $d_name
 	fi
+
 done < ./$out_file
 
 #exit 0
@@ -123,6 +130,9 @@ do
 	#echo "分割:${#array[@]}:${array[$num]} $line"
 	filenm=${array[$num]}
 	motofile=${array[$num]}
+	#ls | sort | grep オンライン視聴 | sed -e s/"\] .*"// | sed -e s/"\["// | sed -e s/"\[.*\]"// | sed -e s/\ //
+	filenm=$(echo "$filenm" | sed -e s/"\]_.*"// | sed -e s/"\["// | sed -e s/"\[.*\]"// | sed -e s/\ //g )
+	echo "変換前:$filenm:$motofile"
 	filenm=$(echo "$filenm" | sed -e "s/\.mp4//" )	
 	filenm=$(echo "$filenm" | sed -e "s/\.mov//" )	
 	filenm=$(echo "$filenm" | sed -e "s/\.mkv//" )	
@@ -162,6 +172,13 @@ do
                 #then
                 #         echo "$line\t$ret_nummojinum" >> $work_file
                 #fi
+		#HEYZO処理
+		if [[ $filenm == *"HEYZO"* ]];
+		then
+			filenm=$( echo "$filenm" | sed -e s/HEYZO-/HEYZO\+/ ) 
+		fi
+
+
 		echo "=======検索:$filenm==========="
 		#doc=$(curl --insecure 'https://javfree.me/?s="$filenm"')
 		#https://sukebei.nyaa.si/?f=2&c=2_2&q=SDNM&s=id&o=asc
@@ -176,7 +193,7 @@ do
 			sub_kensaku_kb=0
 		fi
 		doc=$(echo $doc | sed -r "s/\t//g")
-		echo "検索１結果$doc"
+		#echo "検索１結果$doc"
 		if [[ $sub_kensaku_kb -eq 1 ]] && [[  $doc == *"No results found"* ]];then
 			doc=$(curl --insecure "https://db.msin.jp/jp.search/movie?str=$filenm")
 			#a href="/jp.page/movie?id=188370" title="AV史上もっとも綺麗な40代 宮本紗央里 42歳 AV Debut">
@@ -194,7 +211,7 @@ do
 			echo "===*** m s i n ***==="
 			sub_kensaku_kb=3
 		fi
-		echo "検索２結果$doc"
+		#echo "検索２結果$doc"
 
 
 		echo $doc >> "test"
@@ -279,7 +296,7 @@ do
 				fi
 
 			else
-				if [[ $doc == *"No results found"* ]];
+				if [[ $doc == *"No results found"* ]] || [[ $doc == *"No_results_found"* ]] ;
 				then
 					doc=$( echo "$doc" | sed -r "s/\ /_/g" )
 				else
@@ -287,21 +304,45 @@ do
 				fi
 			fi
 		fi
+		domove=1
+		if [[ $doc == *"No_results_found"* ]];
+		then
+			domove=-1
+			echo "301ムーブしない $doc===================================================="
+		fi
+		if [[ $doc == *"No results found"* ]];
+		then
+			domove=-1
+			echo "302ムーブしない $doc===================================================="
+		fi
+
+
 
 		IFS="$IFS_ORIGINAL"
-		if [[ $doc != *"No results found"* ]];
+#		if [[ $doc != *"No results found"* ]] || [[ $doc != *"No_results_found"* ]];
+		if [[ $domove -eq 1 ]];
 		then
-			#echo "$doc"	
+			echo "318 $doc"	
 			doc=$(echo $doc | sed -e "s/$/_/")	
 			motofile=$(echo $motofile | sed -r "s/hhd800\.com@//g")
-
-
 			echo "MOTO:$doc$motofile"
 			echo "$filenm:$doc" >> "kekka"
 			TargetPATH=$(dirname $line)
 			echo "$TargetPATH"
-			echo "mv:$line $TargetPATH/$doc$motofile"
-			mv "$line" "$TargetPATH/$doc$motofile"
+			if [[ $line = *"オンライン視聴"* ]];
+			then
+				echo "309mv:$motofile"
+				#$motofile=$(echo "$motofile" | sed -e s/"\].*"// | sed -e s/"\["// | sed -e s/"\[.*\]"// | sed -e s/\ //g )
+				echo "310mv:$motofile"
+				echo "311mv:$line $TargetPATH/$doc$motofile"
+				echo "312mv:$doc$filenm"
+				mv "$line" "$TargetPATH/$doc$filenm.mp4" 
+			else
+				echo "313mv:$line $TargetPATH/$doc$motofile"
+				mv "$line" "$TargetPATH/$doc$motofile"
+			fi
+
+
 		fi
 		#exit 0 
 	fi
